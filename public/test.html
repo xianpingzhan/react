@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #main{
+            width: 500px;
+            height: 500px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+</head>
+<body>
+    <div id="main">
+    
+    </div>
+    <script>
+        window.onload = function () {
+            var chartDom = document.getElementById('main');
+            var myChart = echarts.init(chartDom);
+            var option = option = {
+                title: {
+                    text: 'Basic Radar Chart'
+                },
+                legend: {
+                    data: ['Allocated Budget', 'Actual Spending']
+                },
+                radar: {
+                    // shape: 'circle',
+                    indicator: [
+                        {name: 'Sales', max: 6500},
+                        {name: 'Administration', max: 16000},
+                        {name: 'Information Technology', max: 30000},
+                        {name: 'Customer Support', max: 38000},
+                        {name: 'Development', max: 52000}
+                    ]
+                },
+                series: [
+                    {
+                        name: 'Budget vs spending',
+                        type: 'radar',
+                        data: [
+                            {
+                                value: [4200, 3000, 20000, 35000, 50000],
+                                name: 'Allocated Budget'
+                            }
+                        ]
+                    },
+                    
+                ]
+            };
+            myChart.setOption(option);
+
+            myChart.on("click", function (params) {
+                var data = params.event.topTarget.path.data;
+                var arr = []
+                for (var i = 0; i < data.length - 3; i+= 3) {
+                    arr.push({
+                        name: i,
+                        value: {
+                            x1: [data[i + 1], data[i + 2]],
+                            x2: [data[i + 4], data[i + 5]],
+                        }
+                    })
+                }
+                console.log(arr);
+                myChart.setOption({
+                    series: [
+                        {
+                            type: 'custom',
+                            coordinateSystem: 'none',
+                            renderItem: function (params, api) {
+                                var value = arr[params.dataIndexInside].value;
+                                var cp = distance(value.x1[0], value.x1[1], value.x2[0], value.x2[1]);
+                                var wp = getCenterPoint({x: value.x1[0], y: value.x1[1]}, {x:value.x2[0], y:value.x2[1]});
+                                console.log(value);
+                                console.log(wp, cp / 2);
+                                return {
+                                    type: 'bezierCurve',
+                                    shape: {
+                                        x1: value.x1[0],
+                                        y1: value.x1[1],
+                                        x2: value.x2[0],
+                                        y2: value.x2[1],
+                                        cpx1:wp.x + 20,
+                                        cpy1:wp.y+ 20
+                                    },
+                                    style: {
+                                        fill: "transparent",
+                                        stroke: "red",
+                                        strokeWidth: 2,
+                                        lineDash: "dashed",
+                                        lineDashOffset: 15
+                                    }
+                                };
+                            },
+                            data: arr
+                        }
+                    ]
+                })
+            });
+
+            function distance(x1, y1, x2, y2) {
+                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            }
+
+            function getCenterPoint(point1, point2) {
+                return {
+                    x: (point1.x + point2.x) / 2,
+                    y: (point1.y + point2.y) / 2
+                };
+            }
+        }
+    </script>
+</body>
+</html>
